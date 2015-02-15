@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.saucelabs:sebuilder-interpreter:1.0.6">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.saucelabs/sebuilder-interpreter/1.0.6/824fb48ad5044cec78c0a7e9c2035f0b1e537d92/sebuilder-interpreter-1.0.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.saucelabs/sebuilder-interpreter/1.0.6/45e3095e8d6ae046ab130ce1199ff0be5a8c1557/sebuilder-interpreter-1.0.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

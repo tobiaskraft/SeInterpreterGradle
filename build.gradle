@@ -1,0 +1,38 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.5
+version = '1.0'
+
+repositories {
+  mavenCentral()
+}
+
+
+dependencies {
+  testCompile group: 'junit', name: 'junit', version: '4.11'
+
+  compile('com.saucelabs:sebuilder-interpreter:1.0.6')
+//      {
+//    exclude module 'htmlunit:htmlunit'
+//  }
+
+  compile('org.seleniumhq.selenium:selenium-chrome-driver:2.43.1')
+}
+
+task(runSeInterpreter, dependsOn: 'classes', type: JavaExec) {
+  main = 'com.sebuilder.interpreter.SeInterpreter'
+  classpath = sourceSets.main.runtimeClasspath
+  args "src/main/resources/full_example.json"
+//  systemProperty 'simple.message', ''
+
+}
+
+println "${resources}full_example.json"
+
+defaultTasks 'runSeInterpreter'
+
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.2.1'
+}
