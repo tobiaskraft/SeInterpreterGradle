@@ -1,37 +1,68 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+ext {
+  // The drivers we want to use
+  drivers = ["Firefox", "Chrome", "PhantomJs"]
+  ext {
+    seleniumVersion = '2.44.0'
+    chromeDriverVersion = '2.10'
+    phantomJsVersion = '1.9.8'
+  }
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
+apply from: "gradle/osSpecificDownloads.gradle"
 
-sourceCompatibility = 1.5
 version = '1.0'
 
 repositories {
   mavenCentral()
 }
 
-
 dependencies {
-  testCompile group: 'junit', name: 'junit', version: '4.11'
-
   compile('com.saucelabs:sebuilder-interpreter:1.0.6')
-//      {
-//    exclude module 'htmlunit:htmlunit'
-//  }
-
-  compile('org.seleniumhq.selenium:selenium-chrome-driver:2.43.1')
+  compile "org.seleniumhq.selenium:selenium-firefox-driver:$seleniumVersion"
+  compile "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+  // This is version 1.2.0 with a patch to use selenium 2.44.0.
+  // See https://github.com/detro/ghostdriver/issues/397
+  compile("com.codeborne:phantomjsdriver:1.2.1") {
+    transitive = false
+  }
 }
 
-task(runSeInterpreter, dependsOn: 'classes', type: JavaExec) {
+task testWithAllDrivers {
+  dependsOn drivers.collect { driver -> "runSeInterpreter${driver}" }
+}
+
+task(runSeInterpreterChrome, dependsOn: ['unzipChromeDriver', 'classes'], type: JavaExec) {
+  def chromedriverFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "chromedriver.exe" : "chromedriver"
+  systemProperty "webdriver.chrome.driver", new File(unzipChromeDriver.outputs.files.singleFile, chromedriverFilename).absolutePath
+  systemProperty "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog"
+
   main = 'com.sebuilder.interpreter.SeInterpreter'
   classpath = sourceSets.main.runtimeClasspath
   args "src/main/resources/full_example.json"
-//  systemProperty 'simple.message', ''
-
+  args "--driver=Chrome"
 }
 
-println "${resources}full_example.json"
+task(runSeInterpreterPhantomJs, dependsOn: ['unzipPhantomJs', 'classes'], type: JavaExec) {
+  def phantomJsFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "phantomjs.exe" : "bin/phantomjs"
+  systemProperty "phantomjs.binary.path", new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
 
-defaultTasks 'runSeInterpreter'
+  main = 'com.sebuilder.interpreter.SeInterpreter'
+  classpath = sourceSets.main.runtimeClasspath
+  args "src/main/resources/full_example.json"
+  args "--driver=PhantomJs"
+}
 
+task(runSeInterpreterFirefox, dependsOn: 'classes', type: JavaExec) {
+  main = 'com.sebuilder.interpreter.SeInterpreter'
+  classpath = sourceSets.main.runtimeClasspath
+  args "src/main/resources/full_example.json"
+  args "--driver=Firefox"
+  args "--driver.binary=/usr/bin/firefox"
+}
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.2.1'
