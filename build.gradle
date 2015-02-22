@@ -1,8 +1,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 ext {
-  // The drivers we want to use
-  drivers = ["Firefox", "Chrome", "PhantomJs"]
   ext {
     seleniumVersion = '2.44.0'
     chromeDriverVersion = '2.10'
@@ -31,24 +29,19 @@ dependencies {
   }
 }
 
-task testWithAllDrivers {
-  dependsOn drivers.collect { driver -> "runSeInterpreter${driver}" }
+task runWithAllDrivers {
+  // The drivers we want to use
+  def drivers = ["Firefox", "Chrome", "PhantomJs"]
+  dependsOn drivers.collect { driver -> "runSeInterpreterWith${driver}" }
 }
 
-task(runSeInterpreterChrome, dependsOn: ['unzipChromeDriver', 'classes'], type: JavaExec) {
-  def chromedriverFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "chromedriver.exe" : "chromedriver"
-  systemProperty "webdriver.chrome.driver", new File(unzipChromeDriver.outputs.files.singleFile, chromedriverFilename).absolutePath
-  systemProperty "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog"
-
-  main = 'com.sebuilder.interpreter.SeInterpreter'
-  classpath = sourceSets.main.runtimeClasspath
-  args "src/main/resources/full_example.json"
-  args "--driver=Chrome"
-}
-
-task(runSeInterpreterPhantomJs, dependsOn: ['unzipPhantomJs', 'classes'], type: JavaExec) {
+task(runSeInterpreterWithPhantomJs, dependsOn: ['unzipPhantomJs', 'classes'], type: JavaExec) {
   def phantomJsFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "phantomjs.exe" : "bin/phantomjs"
-  systemProperty "phantomjs.binary.path", new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
+  systemProperty "phantomjs.binary.path",
+      new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
+
+  systemProperty "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog"
+  systemProperty "org.apache.commons.logging.simplelog.log.com.sebuilder.interpreter.SeInterpreter", 'DEBUG'
 
   main = 'com.sebuilder.interpreter.SeInterpreter'
   classpath = sourceSets.main.runtimeClasspath
@@ -56,13 +49,36 @@ task(runSeInterpreterPhantomJs, dependsOn: ['unzipPhantomJs', 'classes'], type: 
   args "--driver=PhantomJs"
 }
 
-task(runSeInterpreterFirefox, dependsOn: 'classes', type: JavaExec) {
+task(runSeInterpreterWithChrome, dependsOn: ['unzipChromeDriver', 'classes'], type: JavaExec) {
+  def chromedriverFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "chromedriver.exe" : "chromedriver"
+  systemProperty "webdriver.chrome.driver",
+      new File(unzipChromeDriver.outputs.files.singleFile, chromedriverFilename).absolutePath
+
+  systemProperty "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog" // NoOpLog"
+  systemProperty "org.apache.commons.logging.simplelog.log.com.sebuilder.interpreter.SeInterpreter", 'DEBUG'
+
+  main = 'com.sebuilder.interpreter.SeInterpreter'
+  classpath = sourceSets.main.runtimeClasspath
+  args "src/main/resources/full_example.json"
+  args "--driver=Chrome"
+}
+
+task(runSeInterpreterWithFirefox, dependsOn: ['classes'], type: JavaExec) {
   main = 'com.sebuilder.interpreter.SeInterpreter'
   classpath = sourceSets.main.runtimeClasspath
   args "src/main/resources/full_example.json"
   args "--driver=Firefox"
   args "--driver.binary=/usr/bin/firefox"
 }
+
+task(customRun, dependsOn: 'classes', type: JavaExec) {
+  main = 'com.sebuilder.interpreter.SeInterpreter'
+  classpath = sourceSets.main.runtimeClasspath
+  args "src/main/resources/full_example.json"
+  args "--driver=Firefox"
+  args "--driver.binary=/usr/bin/firefox"
+}
+
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.2.1'
